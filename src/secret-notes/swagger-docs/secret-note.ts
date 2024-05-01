@@ -67,3 +67,27 @@ export const getOneSecretNoteResponse = {
     },
   },
 };
+
+export const updateSecretNoteResponse = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      example: 'id of the updated note',
+    },
+    message: {
+      type: 'string',
+      example: 'Note updated successfully',
+    },
+  },
+};
+
+export const deleteSecretNoteResponse = {
+  type: 'object',
+  properties: {
+    message: {
+      type: 'string',
+      example: 'Note deleted successfully',
+    },
+  },
+};

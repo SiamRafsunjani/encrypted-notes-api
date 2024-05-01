@@ -8,18 +8,21 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { NotesService } from './secret-note.service';
 import { SecretNote as SecretNoteModel } from '@prisma/client';
 import * as apiResponseDocs from './swagger-docs/secret-note';
-import {
-  CreateSecretNoteDto,
-  PaginationDto,
-  IdDto,
-} from './dto/secret-note-dto';
+import { CreateSecretNoteDto, PaginationDto } from './dto/secret-note-dto';
 
 @Controller()
 @ApiTags('Secret Notes')
+@ApiBearerAuth('apiKey')
 @ApiResponse({ status: 403, schema: apiResponseDocs.forbiddenResponse })
 @ApiResponse({ status: 400, schema: apiResponseDocs.invalidDataResponse })
 export class SecretNotesController {
@@ -69,19 +72,27 @@ export class SecretNotesController {
 
   @Get('secret-note/decrypted/:id')
   @ApiOperation({ summary: 'Get one decrypted note by id' })
-  @ApiParam({ name: 'id', description: 'The ID of the data' })
   @ApiResponse({
     status: 200,
     schema: apiResponseDocs.getOneSecretNoteResponse,
   })
-  async getDecryptedNoteById(@Param('id') id: IdDto): Promise<SecretNoteModel> {
-    return this.secretNoteService.findOneDecrypted(Number(id));
+  @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
+  async getDecryptedNoteById(
+    @Param('id') id: number,
+  ): Promise<SecretNoteModel> {
+    return this.secretNoteService.findOneDecrypted(id);
   }
 
   @Put('secret-note/:id')
+  @ApiOperation({ summary: 'Update a note with a new note' })
+  @ApiResponse({
+    status: 200,
+    schema: apiResponseDocs.updateSecretNoteResponse,
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
   async updateNote(
-    @Param('id') id: IdDto,
-    @Body() updatedNoteData: { note?: string },
+    @Param('id') id: number,
+    @Body() updatedNoteData: CreateSecretNoteDto,
   ): Promise<SecretNoteModel> {
     const { note } = updatedNoteData;
     return this.secretNoteService.update({
@@ -93,7 +104,13 @@ export class SecretNotesController {
   }
 
   @Delete('secret-note/:id')
-  async deleteNote(@Param('id') id: IdDto): Promise<SecretNoteModel> {
-    return this.secretNoteService.remove({ id: Number(id) });
+  @ApiOperation({ summary: 'Delete a note' })
+  @ApiResponse({
+    status: 200,
+    schema: apiResponseDocs.deleteSecretNoteResponse,
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
+  async deleteNote(@Param('id') id: number): Promise<SecretNoteModel> {
+    return this.secretNoteService.remove({ id });
   }
 }

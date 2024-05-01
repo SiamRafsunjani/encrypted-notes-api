@@ -1,16 +1,36 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './http-exception-filters';
+
 import helmet from 'helmet';
+
+// The checkEnvironment function checks if all required environment variables are defined.
+// If any of the required environment variables are undefined, the function throws an error.
+// Can be extended to check CLIENT_ORIGIN_URL, CLIENT_VERSION etc.
+function checkEnvironment(configService: ConfigService) {
+  const requiredEnvVars = ['PORT', 'DATABASE_URL', 'API_SECRET', 'NODE_ENV'];
+
+  requiredEnvVars.forEach((envVar) => {
+    if (!configService.get<string>(envVar)) {
+      throw Error(`Undefined environment variable: ${envVar}`);
+    }
+  });
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
   });
 
+  const configService = app.get<ConfigService>(ConfigService);
+  checkEnvironment(configService);
+
   // ValidationPipe is a built-in pipe that uses the class-validator library to automatically validate incoming requests.
   // The transform option is set to true to transform payloads into instances of the DTO classes.
+  // Enabling the enableImplicitConversion option allows the pipe to convert incoming request payloads to the expected types.
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -19,8 +39,19 @@ async function bootstrap() {
       },
     }),
   );
+  // The HttpExceptionFilter class is a custom exception filter that catches all
+  // HttpExceptions and returns a JSON response with the error message.
+  app.useGlobalFilters(new HttpExceptionFilter());
 
+  // Helmet is a middleware that helps secure Express apps by setting various HTTP headers.
   app.use(helmet());
+
+  app.enableCors({
+    origin: configService.get<string>('CLIENT_ORIGIN_URL'),
+    methods: ['GET'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400,
+  });
 
   // Disable swagger for production environment
   if (process.env.NODE_ENV === 'development') {
@@ -29,7 +60,17 @@ async function bootstrap() {
       .setDescription('The Spherity Secret notes API description')
       .setVersion('1.0')
       .addTag('Secret Notes')
-      .addBasicAuth()
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'string',
+          name: 'Authorization',
+          description: 'Enter API key',
+          in: 'header',
+        },
+        'apiKey',
+      )
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
