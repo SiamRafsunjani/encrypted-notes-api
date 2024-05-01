@@ -19,6 +19,7 @@ import { NotesService } from './secret-note.service';
 import { SecretNote as SecretNoteModel } from '@prisma/client';
 import * as apiResponseDocs from './swagger-docs/secret-note';
 import { CreateSecretNoteDto, PaginationDto } from './dto/secret-note-dto';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 
 @Controller()
 @ApiTags('Secret Notes')
@@ -26,7 +27,12 @@ import { CreateSecretNoteDto, PaginationDto } from './dto/secret-note-dto';
 @ApiResponse({ status: 403, schema: apiResponseDocs.forbiddenResponse })
 @ApiResponse({ status: 400, schema: apiResponseDocs.invalidDataResponse })
 export class SecretNotesController {
-  constructor(private readonly secretNoteService: NotesService) {}
+  constructor(
+    private readonly secretNoteService: NotesService,
+    // Setups Pino logger context
+    @InjectPinoLogger('secret-notes-controller')
+    private readonly logger: PinoLogger,
+  ) {}
 
   @Post('secret-note')
   @ApiOperation({ summary: 'Create a secret note' })
@@ -38,6 +44,7 @@ export class SecretNotesController {
     @Body() createSecretNoteDto: CreateSecretNoteDto,
   ): Promise<{ id: number }> {
     const { note } = createSecretNoteDto;
+    this.logger.info({ message: 'creating a note' });
     return this.secretNoteService.create({
       note,
     });
@@ -53,6 +60,7 @@ export class SecretNotesController {
     @Query() paginationDto: PaginationDto,
   ): Promise<SecretNoteModel[]> {
     const { page, limit } = paginationDto;
+    this.logger.info({ message: 'getting all notes', page, limit });
     return this.secretNoteService.findAll({
       page,
       limit,
@@ -67,6 +75,7 @@ export class SecretNotesController {
   })
   @ApiParam({ name: 'id', description: 'The ID of the data' })
   async getNoteById(@Param('id') id: number): Promise<SecretNoteModel> {
+    this.logger.info({ message: 'finding note by id', id });
     return this.secretNoteService.findOne(id);
   }
 
@@ -80,6 +89,7 @@ export class SecretNotesController {
   async getDecryptedNoteById(
     @Param('id') id: number,
   ): Promise<SecretNoteModel> {
+    this.logger.info({ message: 'finding decrypted note by id', id });
     return this.secretNoteService.findOneDecrypted(id);
   }
 
@@ -96,10 +106,8 @@ export class SecretNotesController {
   ): Promise<SecretNoteModel> {
     const { note } = updatedNoteData;
     return this.secretNoteService.update({
-      where: { id: Number(id) },
-      data: {
-        note,
-      },
+      where: { id },
+      data: { note },
     });
   }
 
@@ -111,6 +119,7 @@ export class SecretNotesController {
   })
   @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
   async deleteNote(@Param('id') id: number): Promise<SecretNoteModel> {
+    this.logger.info({ message: 'deleting note', id });
     return this.secretNoteService.remove({ id });
   }
 }

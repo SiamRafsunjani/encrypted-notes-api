@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SecretNotesController } from './secret-notes.controller';
 import { NotesService } from './secret-note.service';
 import { PrismaService } from '../prisma.service';
+import { LoggerModule } from 'nestjs-pino';
 
 describe('NotesController', () => {
   let controller: SecretNotesController;
@@ -9,7 +10,8 @@ describe('NotesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SecretNotesController],
-      providers: [NotesService, PrismaService],
+      imports: [LoggerModule.forRoot()],
+      providers: [NotesService, PrismaService], // Add the missing dependencies here
     }).compile();
 
     controller = module.get<SecretNotesController>(SecretNotesController);

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './http-exception-filters';
+import { Logger } from 'nestjs-pino';
 
 import helmet from 'helmet';
 
@@ -45,6 +46,8 @@ async function bootstrap() {
 
   // Helmet is a middleware that helps secure Express apps by setting various HTTP headers.
   app.use(helmet());
+
+  app.useLogger(app.get(Logger));
 
   app.enableCors({
     origin: configService.get<string>('CLIENT_ORIGIN_URL'),
