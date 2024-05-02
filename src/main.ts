@@ -5,6 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './http-exception-filters';
 import { Logger } from 'nestjs-pino';
+// import { SecretsManager } from 'aws-sdk';
 
 import helmet from 'helmet';
 
@@ -12,7 +13,14 @@ import helmet from 'helmet';
 // If any of the required environment variables are undefined, the function throws an error.
 // Can be extended to check CLIENT_ORIGIN_URL, CLIENT_VERSION etc.
 function checkEnvironment(configService: ConfigService) {
-  const requiredEnvVars = ['PORT', 'DATABASE_URL', 'API_SECRET', 'NODE_ENV'];
+  const requiredEnvVars = [
+    'PORT',
+    'NODE_ENV',
+    'AES_ENCRYPTION_METHOD',
+    'AES_SECRET_KEY',
+    'API_TOKEN',
+    'DATABASE_URL',
+  ];
 
   requiredEnvVars.forEach((envVar) => {
     if (!configService.get<string>(envVar)) {

@@ -3,6 +3,8 @@ import { SecretNotesController } from './secret-notes.controller';
 import { NotesService } from './secret-note.service';
 import { PrismaService } from '../prisma.service';
 import { LoggerModule } from 'nestjs-pino';
+import { EncryptionService } from '../common/helpers/transform-objects';
+import { ConfigService } from '@nestjs/config';
 
 describe('NotesController', () => {
   let controller: SecretNotesController;
@@ -11,7 +13,12 @@ describe('NotesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SecretNotesController],
       imports: [LoggerModule.forRoot()],
-      providers: [NotesService, PrismaService], // Add the missing dependencies here
+      providers: [
+        NotesService,
+        PrismaService,
+        EncryptionService,
+        ConfigService,
+      ], // Add the missing dependencies here
     }).compile();
 
     controller = module.get<SecretNotesController>(SecretNotesController);

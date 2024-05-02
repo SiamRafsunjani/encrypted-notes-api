@@ -7,6 +7,11 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from './middlewares/authorization.guard';
 import { LoggerModule } from 'nestjs-pino';
 
+// TODO: This module is the root module of the application
+// For this implementation we are importing everything we need here
+// We can think of moving to other modules if necessary.
+// for example we can move the ThrottlerModule to the SecretNoteNotesModule
+// if we want to limit the requests only for the secret notes
 @Module({
   imports: [
     SecretNoteNotesModule,

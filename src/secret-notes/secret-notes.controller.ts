@@ -16,10 +16,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { NotesService } from './secret-note.service';
-import { SecretNote as SecretNoteModel } from '@prisma/client';
+import { EncryptionService } from '../common/helpers/transform-objects';
 import * as apiResponseDocs from './swagger-docs/secret-note';
 import { CreateSecretNoteDto, PaginationDto } from './dto/secret-note-dto';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
+import { ISecretNoteExposed, ISecretNoteMetaData } from './secret-note.types';
 
 @Controller()
 @ApiTags('Secret Notes')
@@ -32,6 +33,7 @@ export class SecretNotesController {
     // Setups Pino logger context
     @InjectPinoLogger('secret-notes-controller')
     private readonly logger: PinoLogger,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   @Post('secret-note')
@@ -42,11 +44,15 @@ export class SecretNotesController {
   })
   async createNote(
     @Body() createSecretNoteDto: CreateSecretNoteDto,
-  ): Promise<{ id: number }> {
+  ): Promise<ISecretNoteMetaData> {
     const { note } = createSecretNoteDto;
     this.logger.info({ message: 'creating a note' });
+    const { encryptedData, encryptionIV } =
+      this.encryptionService.encryptData(note);
+
     return this.secretNoteService.create({
-      note,
+      note: encryptedData,
+      encryptionIv: encryptionIV,
     });
   }
 
@@ -58,7 +64,7 @@ export class SecretNotesController {
   })
   async getAllNotes(
     @Query() paginationDto: PaginationDto,
-  ): Promise<SecretNoteModel[]> {
+  ): Promise<ISecretNoteMetaData[]> {
     const { page, limit } = paginationDto;
     this.logger.info({ message: 'getting all notes', page, limit });
     return this.secretNoteService.findAll({
@@ -74,9 +80,10 @@ export class SecretNotesController {
     schema: apiResponseDocs.getOneSecretNoteResponse,
   })
   @ApiParam({ name: 'id', description: 'The ID of the data' })
-  async getNoteById(@Param('id') id: number): Promise<SecretNoteModel> {
+  async getNoteById(@Param('id') id: number): Promise<ISecretNoteExposed> {
     this.logger.info({ message: 'finding note by id', id });
-    return this.secretNoteService.findOne(id);
+    const data = await this.secretNoteService.findOne(id);
+    return { id: data.id, note: data.note, createdAt: data.createdAt };
   }
 
   @Get('secret-note/decrypted/:id')
@@ -88,9 +95,19 @@ export class SecretNotesController {
   @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
   async getDecryptedNoteById(
     @Param('id') id: number,
-  ): Promise<SecretNoteModel> {
+  ): Promise<ISecretNoteExposed> {
     this.logger.info({ message: 'finding decrypted note by id', id });
-    return this.secretNoteService.findOneDecrypted(id);
+    const storedNote = await this.secretNoteService.findOne(id);
+    const decryptedNote = this.encryptionService.decryptData(
+      storedNote.note,
+      storedNote.encryptionIv,
+    );
+
+    return {
+      id: storedNote.id,
+      note: decryptedNote,
+      createdAt: storedNote.createdAt,
+    };
   }
 
   @Put('secret-note/:id')
@@ -103,11 +120,14 @@ export class SecretNotesController {
   async updateNote(
     @Param('id') id: number,
     @Body() updatedNoteData: CreateSecretNoteDto,
-  ): Promise<SecretNoteModel> {
+  ) {
     const { note } = updatedNoteData;
+    const { encryptedData, encryptionIV } =
+      this.encryptionService.encryptData(note);
+
     return this.secretNoteService.update({
       where: { id },
-      data: { note },
+      data: { note: encryptedData, encryptionIv: encryptionIV },
     });
   }
 
@@ -118,8 +138,9 @@ export class SecretNotesController {
     schema: apiResponseDocs.deleteSecretNoteResponse,
   })
   @ApiParam({ name: 'id', description: 'The ID of the data', type: 'number' })
-  async deleteNote(@Param('id') id: number): Promise<SecretNoteModel> {
+  async deleteNote(@Param('id') id: number): Promise<{ message: string }> {
     this.logger.info({ message: 'deleting note', id });
-    return this.secretNoteService.remove({ id });
+    await this.secretNoteService.remove({ id });
+    return { message: 'Note deleted' };
   }
 }

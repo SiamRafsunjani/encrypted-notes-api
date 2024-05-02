@@ -15,7 +15,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const token = authorizationHeader.split(' ')[1];
-    const secret = this.configService.get<string>('API_SECRET');
+    const secret = this.configService.get<string>('API_TOKEN');
 
     return token === secret;
   }
