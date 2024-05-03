@@ -1,74 +1,77 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Encrypted Notes api
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This is a simple API to store encrypted notes. It uses Node.js, NestJs, and PostgreSQL. The notes are encrypted using the AES algorithm. This is a sample project to demonstrate how to use NestJs with PostgreSQL with AES encryption.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The functional requirements are as follows:
 
-## Description
+1. User should be able to create a note.
+2. User should be able to view metadata for all notes.
+3. User should be able to view a note encrypted and decrypted.
+4. User should be able to update a note.
+5. User should be able to delete a note.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The non-functional requirements are as follows:
+1. The notes should be encrypted using the AES algorithm.
+2. The notes should be stored in a PostgreSQL database.
+3. The API should be secured with an API key. The one who controls the API key can access the API.
+4. The API should be containerized.
 
-## Installation
+## Folder structure
+    
+    ├── src
+    │   ├── secret-note
+            |── dto
+            |   ├── secret-note-note.dto.ts
+            ├── swagger-docs
+            |   ├── swagger-docs.ts
+    │   │   ├── secret-note.controller.ts
+    │   │   ├── secret-note.module.ts
+    │   │   ├── secret-note.service.ts
+    │   │   ├── secret-note.entity.ts
+    │   ├── middleware
+            ├── authorization.guard.ts
+    │   ├── common
+            ├── transform-objects.ts
+    │   ├── app.module.ts
+    │   ├── main.ts
+    │   ├── http-exception.filter.ts
+    │   ├── prisma.service.ts
+    ├── test
+    ├── Dockerfile
+    ├── docker-compose.yml
 
+## Technologies used
+1. Node.js, NestJs
+2. PostgreSQL
+3. Docker
+4. Swagger for API documentation
+5. Prisma as the ORM
+6. Jest for testing
+
+## Installation and running the dev environment
+
+Get the environment variables from this [dummy vault](https://drive.google.com/file/d/1uX60OzpS50a3AvFgIclIqESaiv-Q7t_k/view?usp=sharing) and copy the ```.env``` file to the root directory of the project.
+
+#### Running the project locally
 ```bash
 $ npm install
+$ npm start:dev
 ```
 
-## Running the app
+#### Running with Docker
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+$ docker-compose up --build
 ```
 
-## Test
+this will spin up the node server and the postgres database. The server will be running on port 3000.
 
-```bash
-# unit tests
-$ npm run test
+## API Documentation
 
-# e2e tests
-$ npm run test:e2e
+* The API documentation can be found at ```http://localhost:3000/api-docs```
 
-# test coverage
-$ npm run test:cov
-```
+* The Architecture decision records can be found in the docs folder in markdown format.
 
-## Support
+## Testing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
-# encrypted-notes-api
+Run the tests with ```npm run test``` command
