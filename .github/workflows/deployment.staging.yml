@@ -1,0 +1,33 @@
+name: staging-deploy
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Copy repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build and Package Docker Image
+        run: |
+          echo "Building Docker Image"
+
+      - name: Transfer Docker Image to Server
+        run: |
+          echo "Transferring Docker Image to Server"
+          
+
+      - name: Connect to Server and Deploy
+        run: |
+          echo "Connecting to Server and Deploying Docker Image"
